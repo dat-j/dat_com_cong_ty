@@ -46,16 +46,26 @@ const ShimmerText = ({ children, className = '', style = {} }) => {
       <style>{`
         .shimmer-text {
           position: relative;
+          display: inline-block;
+          color: #ffffff;
           background: linear-gradient(90deg, 
-            rgba(255,255,255,0.7) 0%, 
-            rgba(255,255,255,1) 50%, 
-            rgba(255,255,255,0.7) 100%
+            rgba(255,255,255,0.8) 0%, 
+            rgba(255,255,255,1) 40%,
+            rgba(255,255,255,1) 60%, 
+            rgba(255,255,255,0.8) 100%
           );
           background-size: 200% 100%;
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
           animation: shimmer 3s linear infinite;
+        }
+        /* Fallback for browsers that don't support background-clip */
+        @supports not (-webkit-background-clip: text) {
+          .shimmer-text {
+            color: #ffffff;
+            background: none;
+          }
         }
         @keyframes shimmer {
           0% { background-position: -200% 0; }
@@ -230,15 +240,8 @@ const MenuCard = ({ item, index, handleOrder, isSpecial }) => {
                 fontWeight: '900',
                 lineHeight: 1
               }}>
-                {item.price.toLocaleString('vi-VN')}
+                {parseInt(item.price)}.000đ
               </ShimmerText>
-              <span style={{
-                fontSize: '1.1rem',
-                color: '#fff',
-                fontWeight: '700'
-              }}>
-                đ
-              </span>
             </div>
           </motion.div>
         </div>
@@ -447,9 +450,9 @@ const UserDashboard = () => {
                 fontSize: '3rem',
                 fontWeight: '900',
                 marginBottom: '0.75rem',
-                letterSpacing: '1px'
+                letterSpacing: '1px',
               }}>
-                🍱 Menu Hôm Nay
+              Menu
               </h1>
             </ShimmerText>
           </Sparkles>
@@ -739,7 +742,7 @@ const UserDashboard = () => {
                       <strong>Món:</strong> {selectedItem.name}
                     </p>
                     <p style={{ margin: 0, fontSize: '1.4rem', fontWeight: '900', color: '#86efac' }}>
-                      <strong>Giá:</strong> {selectedItem.price.toLocaleString('vi-VN')}đ
+                      <strong>Giá:</strong> {parseInt(selectedItem.price)}.000đ
                     </p>
                   </motion.div>
 
