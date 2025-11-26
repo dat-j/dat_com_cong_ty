@@ -1,4 +1,10 @@
-import { IsUUID, IsNotEmpty, IsEnum, IsOptional } from 'class-validator';
+import {
+  IsUUID,
+  IsNotEmpty,
+  IsEnum,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { PaymentMethod, OrderStatus } from '../order.entity';
 
 export class CreateOrderDto {
@@ -9,6 +15,10 @@ export class CreateOrderDto {
   @IsEnum(PaymentMethod)
   @IsOptional()
   paymentMethod?: PaymentMethod;
+
+  @IsString()
+  @IsOptional()
+  notes?: string;
 }
 
 export class MarkPaymentDto {

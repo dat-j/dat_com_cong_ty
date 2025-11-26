@@ -310,6 +310,16 @@ const UserDashboard = () => {
   const [showPayment, setShowPayment] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [paymentMethod, setPaymentMethod] = useState('immediate'); // 'immediate' or 'pay_later'
+  const [selectedNoteOptions, setSelectedNoteOptions] = useState([]);
+  const [customNote, setCustomNote] = useState('');
+
+  // Predefined note options
+  const noteOptions = [
+    { id: 'less_rice_more_veg', label: '🥬 Ít cơm nhiều rau' },
+    { id: 'more_rice', label: '🍚 Nhiều cơm' },
+    { id: 'add_chili', label: '🌶️ Thêm ớt' },
+    { id: 'add_fish_sauce', label: '🥄 Thêm nước mắm' },
+  ];
 
   useEffect(() => {
     fetchTodayMenu();
@@ -332,6 +342,8 @@ const UserDashboard = () => {
       setSelectedItem(menuItem);
       setShowPayment(true);
       setPaymentMethod('immediate'); // Reset to default
+      setSelectedNoteOptions([]); // Reset notes
+      setCustomNote(''); // Reset custom note
     } catch (error) {
       setMessage({ type: 'error', text: error.response?.data?.message || 'Đặt món thất bại.' });
     }
@@ -339,7 +351,21 @@ const UserDashboard = () => {
 
   const handleConfirmOrder = async () => {
     try {
-      await orderService.createOrder(selectedItem.id, paymentMethod);
+      // Build notes string from selected options and custom note
+      const notesParts = [];
+      if (selectedNoteOptions.length > 0) {
+        const selectedLabels = selectedNoteOptions.map(optionId => {
+          const option = noteOptions.find(opt => opt.id === optionId);
+          return option ? option.label : '';
+        }).filter(Boolean);
+        notesParts.push(...selectedLabels);
+      }
+      if (customNote.trim()) {
+        notesParts.push(customNote.trim());
+      }
+      const notes = notesParts.length > 0 ? notesParts.join(', ') : null;
+
+      await orderService.createOrder(selectedItem.id, paymentMethod, notes);
       
       setMessage({ 
         type: 'success', 
@@ -350,6 +376,8 @@ const UserDashboard = () => {
       setShowPayment(false);
       setSelectedItem(null);
       setPaymentMethod('immediate');
+      setSelectedNoteOptions([]);
+      setCustomNote('');
     } catch (error) {
       setMessage({ type: 'error', text: error.response?.data?.message || 'Đặt món thất bại.' });
     }
@@ -684,6 +712,8 @@ const UserDashboard = () => {
                   onClick={() => {
                     setShowPayment(false);
                     setPaymentMethod('immediate');
+                    setSelectedNoteOptions([]);
+                    setCustomNote('');
                   }}
                   style={{
                     position: 'absolute',
@@ -744,6 +774,95 @@ const UserDashboard = () => {
                     <p style={{ margin: 0, fontSize: '1.4rem', fontWeight: '900', color: '#86efac' }}>
                       <strong>Giá:</strong> {parseInt(selectedItem.price)}.000đ
                     </p>
+                  </motion.div>
+
+                  {/* Notes/Options Section */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    style={{ marginBottom: '1.5rem' }}
+                  >
+                    <p style={{ marginBottom: '1rem', color: '#c7d2fe', fontWeight: '600', fontSize: '1.05rem' }}>
+                      🍴 Ghi chú cho món ăn:
+                    </p>
+                    
+                    {/* Predefined Options */}
+                    <div style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: 'repeat(2, 1fr)', 
+                      gap: '0.75rem',
+                      marginBottom: '1rem'
+                    }}>
+                      {noteOptions.map((option) => {
+                        const isSelected = selectedNoteOptions.includes(option.id);
+                        return (
+                          <motion.label
+                            key={option.id}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={(e) => e.stopPropagation()}
+                            style={{
+                              padding: '0.85rem 1rem',
+                              borderRadius: '12px',
+                              background: isSelected ? 'rgba(139, 92, 246, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                              border: `2px solid ${isSelected ? 'rgba(139, 92, 246, 0.5)' : 'rgba(255, 255, 255, 0.1)'}`,
+                              cursor: 'pointer',
+                              transition: 'all 0.3s ease',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.5rem',
+                              fontSize: '0.9rem',
+                              fontWeight: '600',
+                              color: '#e0e7ff'
+                            }}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedNoteOptions([...selectedNoteOptions, option.id]);
+                                } else {
+                                  setSelectedNoteOptions(selectedNoteOptions.filter(id => id !== option.id));
+                                }
+                              }}
+                              style={{ 
+                                width: '18px', 
+                                height: '18px', 
+                                cursor: 'pointer', 
+                                accentColor: '#8b5cf6',
+                                flexShrink: 0
+                              }}
+                            />
+                            <span>{option.label}</span>
+                          </motion.label>
+                        );
+                      })}
+                    </div>
+
+                    {/* Custom Note Textarea */}
+                    <textarea
+                      value={customNote}
+                      onChange={(e) => setCustomNote(e.target.value)}
+                      placeholder="Ghi chú thêm (nếu có)..."
+                      style={{
+                        width: '100%',
+                        minHeight: '80px',
+                        padding: '0.85rem',
+                        borderRadius: '12px',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        border: '2px solid rgba(255, 255, 255, 0.1)',
+                        color: '#e0e7ff',
+                        fontSize: '0.9rem',
+                        fontFamily: 'inherit',
+                        resize: 'vertical',
+                        outline: 'none',
+                        transition: 'border-color 0.3s ease'
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = 'rgba(139, 92, 246, 0.5)'}
+                      onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)'}
+                    />
                   </motion.div>
 
                   {/* Payment Method Selection */}

@@ -77,6 +77,20 @@ const OrderCard = ({ order, actions = [], index = 0 }) => {
             {order.createdAt ? format(new Date(order.createdAt), 'dd/MM/yyyy HH:mm') : 
              order.orderDate ? format(new Date(order.orderDate), 'dd/MM/yyyy') : 'N/A'}
           </p>
+          {order.notes && (
+            <p style={{ 
+              color: 'rgba(251, 146, 60, 0.9)', 
+              fontSize: '0.85rem',
+              marginTop: '0.5rem',
+              padding: '0.5rem 0.75rem',
+              background: 'rgba(251, 146, 60, 0.1)',
+              borderRadius: '8px',
+              border: '1px solid rgba(251, 146, 60, 0.3)',
+              maxWidth: '300px'
+            }}>
+              📝 <strong>Ghi chú:</strong> {order.notes}
+            </p>
+          )}
           <div style={{ marginTop: '0.5rem' }}>
             {getStatusBadge(order.status)}
           </div>

@@ -21,6 +21,7 @@ const AdminDashboard = () => {
   const [confirmedOrders, setConfirmedOrders] = useState([]);
   const [allOrders, setAllOrders] = useState([]);
   const [userDebtData, setUserDebtData] = useState([]);
+  const [showPrintableList, setShowPrintableList] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -90,7 +91,7 @@ const AdminDashboard = () => {
         userMap[userId].allOrders.push(order);
         
         // Calculate debt and paid amounts
-        const price = order.menuItem?.price || 0;
+        const price = Number(order.menuItem?.price) || 0; // Convert to number
         
         if (order.status === 'debt' || order.status === 'pay_later_approved') {
           userMap[userId].totalDebt += price;
@@ -132,6 +133,17 @@ const AdminDashboard = () => {
       fetchPendingOrders();
     } catch (error) {
       setMessage({ type: 'error', text: 'Không thể từ chối đơn hàng.' });
+    }
+  };
+
+  const handleConfirmDebtPayment = async (order) => {
+    try {
+      await orderService.updateOrderStatus(order.id, 'confirmed');
+      setMessage({ type: 'success', text: 'Đã xác nhận thanh toán!' });
+      fetchConfirmedOrders();
+      fetchUserDebtData(); // Also refresh debt tracking
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Không thể xác nhận thanh toán.' });
     }
   };
 
@@ -439,6 +451,11 @@ const AdminDashboard = () => {
                       order={order}
                       index={index}
                       actions={[
+                        ...(order.status === 'debt' || order.status === 'pay_later_approved' ? [{
+                          label: '💵 Xác nhận đã trả',
+                          variant: 'success',
+                          onClick: handleConfirmDebtPayment
+                        }] : []),
                         {
                           label: '🗑️ Xóa',
                           variant: 'danger',
@@ -447,6 +464,35 @@ const AdminDashboard = () => {
                       ]}
                     />
                   ))}
+                </div>
+              )}
+              
+              {/* Export Button */}
+              {confirmedOrders.length > 0 && (
+                <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setShowPrintableList(true)}
+                    style={{
+                      padding: '1rem 2rem',
+                      borderRadius: '16px',
+                      border: 'none',
+                      background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                      color: '#fff',
+                      fontSize: '1.1rem',
+                      fontWeight: '800',
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 20px rgba(34, 197, 94, 0.4)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem',
+                      margin: '0 auto'
+                    }}
+                  >
+                    <span style={{ fontSize: '1.5rem' }}>📋</span>
+                    Xuất Danh Sách Gửi Quán
+                  </motion.button>
                 </div>
               )}
             </motion.div>
@@ -501,7 +547,7 @@ const AdminDashboard = () => {
                         Tổng đã thu
                       </div>
                       <div style={{ fontSize: '2rem', fontWeight: '900', color: '#86efac' }}>
-                        {userDebtData.reduce((sum, u) => sum + u.totalPaid, 0).toLocaleString('vi-VN')}đ
+                        {userDebtData.reduce((sum, u) => sum + u.totalPaid, 0).toLocaleString('vi-VN')}.000đ
                       </div>
                     </div>
                     <div style={{ textAlign: 'center' }}>
@@ -509,7 +555,7 @@ const AdminDashboard = () => {
                         Tổng nợ chưa thu
                       </div>
                       <div style={{ fontSize: '2rem', fontWeight: '900', color: '#fb923c' }}>
-                        {userDebtData.reduce((sum, u) => sum + u.totalDebt, 0).toLocaleString('vi-VN')}đ
+                        {userDebtData.reduce((sum, u) => sum + u.totalDebt, 0).toLocaleString('vi-VN')}.000đ
                       </div>
                     </div>
                   </div>
@@ -604,7 +650,7 @@ const AdminDashboard = () => {
                               fontWeight: '700',
                               color: '#86efac'
                             }}>
-                              {(userData.totalPaid + userData.totalDebt).toLocaleString('vi-VN')}đ
+                              {(userData.totalPaid + userData.totalDebt).toLocaleString('vi-VN')}.000đ
                             </td>
                             <td style={{ 
                               padding: '1rem', 
@@ -616,7 +662,7 @@ const AdminDashboard = () => {
                                   fontWeight: '900',
                                   color: '#fb923c'
                                 }}>
-                                  {userData.totalDebt.toLocaleString('vi-VN')}đ
+                                  {userData.totalDebt.toLocaleString('vi-VN')}.000đ
                                 </span>
                               ) : (
                                 <span style={{
@@ -719,7 +765,7 @@ const AdminDashboard = () => {
                                         color: '#86efac',
                                         fontWeight: '600'
                                       }}>
-                                        {(order.menuItem?.price || 0).toLocaleString('vi-VN')}đ
+                                        {(order.menuItem?.price || 0).toLocaleString('vi-VN')}.000đ
                                       </td>
                                       <td style={{ padding: '0.75rem', textAlign: 'center' }}>
                                         <span style={{
@@ -964,6 +1010,196 @@ const AdminDashboard = () => {
                   ))}
                 </div>
               )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+        
+        {/* Printable Order List Modal */}
+        <AnimatePresence>
+          {showPrintableList && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowPrintableList(false)}
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(0, 0, 0, 0.8)',
+                backdropFilter: 'blur(8px)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1000,
+                padding: '2rem'
+              }}
+            >
+              <motion.div
+                initial={{ scale: 0.9, y: 50 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.9, y: 50 }}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  background: '#ffffff',
+                  color: '#000000',
+                  borderRadius: '16px',
+                  padding: '2.5rem',
+                  maxWidth: '800px',
+                  width: '100%',
+                  maxHeight: '85vh',
+                  overflowY: 'auto',
+                  boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+                  position: 'relative'
+                }}
+              >
+                {/* Close Button */}
+                <button
+                  onClick={() => setShowPrintableList(false)}
+                  style={{
+                    position: 'absolute',
+                    top: '1rem',
+                    right: '1rem',
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    border: '2px solid #000',
+                    background: '#fff',
+                    color: '#000',
+                    fontSize: '1.5rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  ✕
+                </button>
+
+                {/* Header */}
+                <div style={{ textAlign: 'center', marginBottom: '2rem', borderBottom: '3px solid #000', paddingBottom: '1rem' }}>
+                  <h1 style={{ margin: 0, fontSize: '2rem', fontWeight: '900', color: '#000' }}>
+                    DANH SÁCH ĐẶT SUẤT ĂN
+                  </h1>
+                  <p style={{ margin: '0.5rem 0 0', fontSize: '1.1rem', fontWeight: '600', color: '#333' }}>
+                    Ngày: {format(new Date(), 'dd/MM/yyyy')}
+                  </p>
+                </div>
+
+                {/* Order List - Grouped by Menu Item */}
+                {(() => {
+                  // Group orders by menu item
+                  const groupedOrders = {};
+                  confirmedOrders.forEach(order => {
+                    const itemName = order.menuItem?.name || 'N/A';
+                    if (!groupedOrders[itemName]) {
+                      groupedOrders[itemName] = {
+                        count: 0,
+                        price: order.menuItem?.price || 0,
+                        notesMap: {}
+                      };
+                    }
+                    groupedOrders[itemName].count += 1;
+                    
+                    // Group by notes
+                    const noteKey = order.notes || 'Không có ghi chú';
+                    if (!groupedOrders[itemName].notesMap[noteKey]) {
+                      groupedOrders[itemName].notesMap[noteKey] = 0;
+                    }
+                    groupedOrders[itemName].notesMap[noteKey] += 1;
+                  });
+
+                  return (
+                    <div>
+                      {Object.entries(groupedOrders).map(([itemName, data], index) => (
+                        <div 
+                          key={index}
+                          style={{
+                            marginBottom: '1.5rem',
+                            padding: '1.25rem',
+                            background: '#f9f9f9',
+                            border: '2px solid #333',
+                            borderRadius: '8px'
+                          }}
+                        >
+                          <div style={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between', 
+                            alignItems: 'center',
+                            marginBottom: '0.75rem'
+                          }}>
+                            <h3 style={{ 
+                              margin: 0, 
+                              fontSize: '1.4rem', 
+                              fontWeight: '900',
+                              color: '#000'
+                            }}>
+                              {itemName}
+                            </h3>
+                            <div style={{
+                              fontSize: '1.5rem',
+                              fontWeight: '900',
+                              color: '#000',
+                              background: '#ffeb3b',
+                              padding: '0.5rem 1rem',
+                              borderRadius: '8px',
+                              border: '2px solid #000'
+                            }}>
+                              ×{data.count}
+                            </div>
+                          </div>
+                          
+                          {/* Notes breakdown */}
+                          {Object.entries(data.notesMap).length > 0 && (
+                            <div style={{ marginTop: '0.75rem' }}>
+                              {Object.entries(data.notesMap).map(([note, count], idx) => (
+                                <div 
+                                  key={idx}
+                                  style={{
+                                    padding: '0.5rem',
+                                    marginTop: '0.5rem',
+                                    background: note === 'Không có ghi chú' ? 'transparent' : '#fff',
+                                    border: note === 'Không có ghi chú' ? 'none' : '1px solid #666',
+                                    borderRadius: '4px',
+                                    fontSize: '0.95rem',
+                                    color: '#333'
+                                  }}
+                                >
+                                  {note !== 'Không có ghi chú' && (
+                                    <strong style={{ color: '#000' }}>
+                                      📝 ({count}) {note}
+                                    </strong>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                      
+                      {/* Summary */}
+                      <div style={{
+                        marginTop: '2rem',
+                        padding: '1.5rem',
+                        background: '#000',
+                        color: '#fff',
+                        borderRadius: '12px',
+                        textAlign: 'center'
+                      }}>
+                        <h2 style={{ margin: '0 0 0.5rem', fontSize: '1.8rem', fontWeight: '900' }}>
+                          TỔNG CỘNG
+                        </h2>
+                        <p style={{ margin: 0, fontSize: '2.5rem', fontWeight: '900' }}>
+                          {confirmedOrders.length} SUẤT
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>

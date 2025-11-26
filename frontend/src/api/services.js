@@ -53,8 +53,8 @@ export const menuService = {
 
 // Order Services
 export const orderService = {
-  createOrder: async (menuItemId, paymentMethod = 'immediate') => {
-    const response = await api.post('/orders', { menuItemId, paymentMethod });
+  createOrder: async (menuItemId, paymentMethod = 'immediate', notes = null) => {
+    const response = await api.post('/orders', { menuItemId, paymentMethod, notes });
     return response.data;
   },
   

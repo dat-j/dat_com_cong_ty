@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
 import { Order, OrderStatus, PaymentMethod } from './order.entity';
@@ -13,9 +17,12 @@ export class OrdersService {
     private menuService: MenuService,
   ) {}
 
-  async createOrder(userId: string, createOrderDto: CreateOrderDto): Promise<Order> {
+  async createOrder(
+    userId: string,
+    createOrderDto: CreateOrderDto,
+  ): Promise<Order> {
     const menuItem = await this.menuService.findById(createOrderDto.menuItemId);
-    
+
     if (!menuItem) {
       throw new NotFoundException('Menu item not found');
     }
@@ -27,10 +34,12 @@ export class OrdersService {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const paymentMethod = createOrderDto.paymentMethod || PaymentMethod.IMMEDIATE;
-    const initialStatus = paymentMethod === PaymentMethod.PAY_LATER 
-      ? OrderStatus.PAY_LATER_PENDING 
-      : OrderStatus.PENDING;
+    const paymentMethod =
+      createOrderDto.paymentMethod || PaymentMethod.IMMEDIATE;
+    const initialStatus =
+      paymentMethod === PaymentMethod.PAY_LATER
+        ? OrderStatus.PAY_LATER_PENDING
+        : OrderStatus.PENDING;
 
     const order = this.ordersRepository.create({
       userId,
@@ -38,6 +47,7 @@ export class OrdersService {
       orderDate: today,
       status: initialStatus,
       paymentMethod,
+      notes: createOrderDto.notes,
     });
 
     return this.ordersRepository.save(order);
@@ -91,7 +101,7 @@ export class OrdersService {
   async getUserOrdersByDate(userId: string, date: Date): Promise<Order[]> {
     const searchDate = new Date(date);
     searchDate.setHours(0, 0, 0, 0);
-    
+
     const endDate = new Date(searchDate);
     endDate.setHours(23, 59, 59, 999);
 
@@ -183,7 +193,9 @@ export class OrdersService {
   }
 
   // Debt Tracking
-  async getUserDebt(userId: string): Promise<{ totalDebt: number; orderCount: number }> {
+  async getUserDebt(
+    userId: string,
+  ): Promise<{ totalDebt: number; orderCount: number }> {
     const debtOrders = await this.ordersRepository.find({
       where: [
         { userId, status: OrderStatus.DEBT },
@@ -192,7 +204,10 @@ export class OrdersService {
       relations: ['menuItem'],
     });
 
-    const totalDebt = debtOrders.reduce((sum, order) => sum + order.menuItem.price, 0);
+    const totalDebt = debtOrders.reduce(
+      (sum, order) => sum + order.menuItem.price,
+      0,
+    );
     return { totalDebt, orderCount: debtOrders.length };
   }
 
@@ -218,7 +233,11 @@ export class OrdersService {
     });
   }
 
-  async getTotalDebt(): Promise<{ totalDebt: number; userCount: number; orderCount: number }> {
+  async getTotalDebt(): Promise<{
+    totalDebt: number;
+    userCount: number;
+    orderCount: number;
+  }> {
     const debtOrders = await this.ordersRepository.find({
       where: [
         { status: OrderStatus.DEBT },
@@ -227,9 +246,12 @@ export class OrdersService {
       relations: ['menuItem', 'user'],
     });
 
-    const totalDebt = debtOrders.reduce((sum, order) => sum + order.menuItem.price, 0);
-    const uniqueUsers = new Set(debtOrders.map(order => order.userId));
-    
+    const totalDebt = debtOrders.reduce(
+      (sum, order) => sum + order.menuItem.price,
+      0,
+    );
+    const uniqueUsers = new Set(debtOrders.map((order) => order.userId));
+
     return {
       totalDebt,
       userCount: uniqueUsers.size,
@@ -249,7 +271,7 @@ export class OrdersService {
   async getTodayOrders(): Promise<Order[]> {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     const endDate = new Date(today);
     endDate.setHours(23, 59, 59, 999);
 
@@ -262,7 +284,11 @@ export class OrdersService {
     });
   }
 
-  async updateOrderStatus(orderId: string, status: OrderStatus, adminId: string): Promise<Order> {
+  async updateOrderStatus(
+    orderId: string,
+    status: OrderStatus,
+    adminId: string,
+  ): Promise<Order> {
     const order = await this.ordersRepository.findOne({
       where: { id: orderId },
       relations: ['user', 'menuItem'],
@@ -273,7 +299,10 @@ export class OrdersService {
     }
 
     order.status = status;
-    if (status === OrderStatus.CONFIRMED || status === OrderStatus.PAY_LATER_APPROVED) {
+    if (
+      status === OrderStatus.CONFIRMED ||
+      status === OrderStatus.PAY_LATER_APPROVED
+    ) {
       order.approvedAt = new Date();
       order.approvedBy = adminId;
     }

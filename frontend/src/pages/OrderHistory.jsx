@@ -94,6 +94,19 @@ const OrderHistory = () => {
                           <p style={{ color: 'var(--text-secondary)', margin: 0 }}>
                             {format(new Date(order.createdAt), 'HH:mm')}
                           </p>
+                          {order.notes && (
+                            <p style={{ 
+                              color: 'rgba(251, 146, 60, 0.9)', 
+                              fontSize: '0.85rem',
+                              marginTop: '0.5rem',
+                              padding: '0.4rem 0.6rem',
+                              background: 'rgba(251, 146, 60, 0.1)',
+                              borderRadius: '6px',
+                              border: '1px solid rgba(251, 146, 60, 0.2)'
+                            }}>
+                              📝 {order.notes}
+                            </p>
+                          )}
                         </div>
                         
                         <div className="text-center">

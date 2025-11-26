@@ -1,20 +1,28 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { User } from '../users/user.entity';
 import { MenuItem } from '../menu/menu-item.entity';
 
 export enum PaymentMethod {
-  IMMEDIATE = 'immediate',      // Thanh toán ngay
-  PAY_LATER = 'pay_later',      // Thanh toán sau (ghi nợ)
+  IMMEDIATE = 'immediate', // Thanh toán ngay
+  PAY_LATER = 'pay_later', // Thanh toán sau (ghi nợ)
 }
 
 export enum OrderStatus {
-  PENDING = 'pending',                    // Chờ xử lý (thanh toán ngay)
-  PAID = 'paid',                          // Đã thanh toán
-  CONFIRMED = 'confirmed',                // Admin đã xác nhận
-  CANCELLED = 'cancelled',                // Đã hủy
+  PENDING = 'pending', // Chờ xử lý (thanh toán ngay)
+  PAID = 'paid', // Đã thanh toán
+  CONFIRMED = 'confirmed', // Admin đã xác nhận
+  CANCELLED = 'cancelled', // Đã hủy
   PAY_LATER_PENDING = 'pay_later_pending', // Chờ admin duyệt thanh toán sau
   PAY_LATER_APPROVED = 'pay_later_approved', // Admin đã duyệt thanh toán sau
-  DEBT = 'debt',                          // Đang nợ
+  DEBT = 'debt', // Đang nợ
 }
 
 @Entity('orders')
@@ -22,14 +30,14 @@ export class Order {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => User, user => user.orders)
+  @ManyToOne(() => User, (user) => user.orders)
   @JoinColumn({ name: 'user_id' })
   user: User;
 
   @Column({ name: 'user_id' })
   userId: string;
 
-  @ManyToOne(() => MenuItem, menuItem => menuItem.orders)
+  @ManyToOne(() => MenuItem, (menuItem) => menuItem.orders)
   @JoinColumn({ name: 'menu_item_id' })
   menuItem: MenuItem;
 
@@ -61,6 +69,9 @@ export class Order {
 
   @Column({ name: 'approved_by', nullable: true })
   approvedBy: string;
+
+  @Column({ type: 'text', nullable: true })
+  notes: string;
 
   @CreateDateColumn()
   createdAt: Date;
