@@ -34,7 +34,7 @@ const Login = () => {
 
   return (
     <div className="flex items-center justify-center" style={{ minHeight: '100vh', padding: '2rem' }}>
-      <GlassCard className="fade-in" style={{ maxWidth: '450px', width: '100%' }} hover={false}>
+      <GlassCard className="fade-in" style={{ maxWidth: '450px', width: '100%', padding: '3rem', borderRadius: '20px' }} hover={false}>
         <div className="text-center mb-xl">
           <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🍱</h1>
           <h2 style={{ marginBottom: '0.5rem' }}>Đăng Nhập</h2>
