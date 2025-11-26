@@ -9,10 +9,10 @@ import { OrdersModule } from './orders/orders.module';
   imports: [
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: 'localhost',
+      host: 'dpg-d4ipeuc9c44c73b1pdd0-a',
       port: 5432,
-      username: 'postgres',
-      password: '123456',
+      username: 'dattx',
+      password: 'AE5brJEkOC6T5onvJiOxWQC5KhuKN9CR',
       database: 'lunch_order_db',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true, // Auto-create tables (only for development)
