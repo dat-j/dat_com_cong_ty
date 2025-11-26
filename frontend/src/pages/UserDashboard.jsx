@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import Button from '../components/Button';
-import { menuService, orderService } from '../api/services';
+import { menuService, orderService, settingsService } from '../api/services';
 import { format } from 'date-fns';
 import zaloPayQR from '../assets/zalopay_qr.jpeg';
 
@@ -312,6 +312,8 @@ const UserDashboard = () => {
   const [paymentMethod, setPaymentMethod] = useState('immediate'); // 'immediate' or 'pay_later'
   const [selectedNoteOptions, setSelectedNoteOptions] = useState([]);
   const [customNote, setCustomNote] = useState('');
+  const [orderingEnabled, setOrderingEnabled] = useState(true);
+  const [checkingStatus, setCheckingStatus] = useState(true);
 
   // Predefined note options
   const noteOptions = [
@@ -322,8 +324,23 @@ const UserDashboard = () => {
   ];
 
   useEffect(() => {
+    checkOrderingStatus();
     fetchTodayMenu();
   }, []);
+  
+  const checkOrderingStatus = async () => {
+    try {
+      setCheckingStatus(true);
+      const data = await settingsService.getOrderingStatus();
+      setOrderingEnabled(data.enabled);
+    } catch (error) {
+      console.error('Failed to check ordering status:', error);
+      // If API fails, assume ordering is enabled
+      setOrderingEnabled(true);
+    } finally {
+      setCheckingStatus(false);
+    }
+  };
 
   const fetchTodayMenu = async () => {
     try {
@@ -497,7 +514,96 @@ const UserDashboard = () => {
             {format(new Date(), 'EEEE, dd/MM/yyyy')}
           </motion.p>
         </motion.div>
-
+        
+        {/* Check if ordering is closed */}
+        {checkingStatus ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center"
+            style={{ padding: '4rem 0' }}
+          >
+            <motion.div
+              animate={{ rotate: 360, scale: [1, 1.2, 1] }}
+              transition={{
+                rotate: { duration: 2, repeat: Infinity, ease: 'linear' },
+                scale: { duration: 1, repeat: Infinity }
+              }}
+              style={{ fontSize: '3rem', marginBottom: '1rem' }}
+            >
+              🍱
+            </motion.div>
+            <p style={{ color: 'rgba(199, 210, 254, 0.7)' }}>Đang kiểm tra...</p>
+          </motion.div>
+        ) : !orderingEnabled ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            style={{
+              maxWidth: '700px',
+              margin: '0 auto',
+              padding: '3rem 2rem',
+              borderRadius: '32px',
+              background: 'rgba(239, 68, 68, 0.1)',
+              border: '2px solid rgba(239, 68, 68, 0.3)',
+              backdropFilter: 'blur(20px)',
+              textAlign: 'center',
+              boxShadow: '0 30px 60px rgba(0, 0, 0, 0.4), 0 0 80px rgba(239, 68, 68, 0.2)'
+            }}
+          >
+            <motion.div
+              animate={{ 
+                scale: [1, 1.1, 1],
+                rotate: [0, -5, 5, 0]
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: 'easeInOut'
+              }}
+              style={{ fontSize: '5rem', marginBottom: '1.5rem' }}
+            >
+              🔒
+            </motion.div>
+            <h2 style={{
+              fontSize: '2rem',
+              fontWeight: '900',
+              color: '#fca5a5',
+              marginBottom: '1rem',
+              textShadow: '0 2px 10px rgba(239, 68, 68, 0.3)'
+            }}>
+              Admin đã đóng đặt cơm
+            </h2>
+            <div style={{
+              fontSize: '1.2rem',
+              color: 'rgba(252, 165, 165, 0.8)',
+              lineHeight: '1.6',
+              marginBottom: '1.5rem'
+            }}>
+              Hết thời gian đặt cơm rồi
+            </div>
+            <motion.div
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: 'easeInOut'
+              }}
+              style={{
+                padding: '1rem 1.5rem',
+                borderRadius: '16px',
+                background: 'rgba(239, 68, 68, 0.15)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                fontSize: '1rem',
+                color: 'rgba(248, 250, 252, 0.8)',
+                display: 'inline-block'
+              }}
+            >
+              ⏰ Vui lòng quay lại sau
+            </motion.div>
+          </motion.div>
+        ) : (
+          <> 
         {/* Message */}
         <AnimatePresence>
           {message.text && (
@@ -661,6 +767,8 @@ const UserDashboard = () => {
               </div>
             )}
           </>
+        )}
+        </>
         )}
 
         {/* Payment Modal */}

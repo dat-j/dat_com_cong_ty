@@ -147,3 +147,16 @@ export const orderService = {
     return response.data;
   },
 };
+
+// Settings Services
+export const settingsService = {
+  getOrderingStatus: async () => {
+    const response = await api.get('/settings/ordering-status');
+    return response.data;
+  },
+  
+  updateOrderingStatus: async (enabled) => {
+    const response = await api.patch('/settings/ordering-status', { enabled });
+    return response.data;
+  },
+};

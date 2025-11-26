@@ -5,7 +5,7 @@ import GlassCard from '../components/GlassCard';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import OrderCard from '../components/admin/OrderCard';
-import { menuService, orderService } from '../api/services';
+import { menuService, orderService, settingsService } from '../api/services';
 import { format } from 'date-fns';
 
 const AdminDashboard = () => {
@@ -22,10 +22,41 @@ const AdminDashboard = () => {
   const [allOrders, setAllOrders] = useState([]);
   const [userDebtData, setUserDebtData] = useState([]);
   const [showPrintableList, setShowPrintableList] = useState(false);
+  
+  // Ordering status
+  const [orderingEnabled, setOrderingEnabled] = useState(true);
+  const [togglingStatus, setTogglingStatus] = useState(false);
 
   useEffect(() => {
     fetchData();
+    fetchOrderingStatus();
   }, [activeTab]);
+  
+  const fetchOrderingStatus = async () => {
+    try {
+      const data = await settingsService.getOrderingStatus();
+      setOrderingEnabled(data.enabled);
+    } catch (error) {
+      console.error('Failed to fetch ordering status:', error);
+    }
+  };
+  
+  const toggleOrderingStatus = async () => {
+    try {
+      setTogglingStatus(true);
+      const newStatus = !orderingEnabled;
+      await settingsService.updateOrderingStatus(newStatus);
+      setOrderingEnabled(newStatus);
+      setMessage({ 
+        type: 'success', 
+        text: newStatus ? '✅ Đã mở đặt cơm!' : '🔒 Đã đóng đặt cơm!' 
+      });
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Không thể thay đổi trạng thái đặt cơm.' });
+    } finally {
+      setTogglingStatus(false);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -272,6 +303,79 @@ const AdminDashboard = () => {
           <p style={{ color: 'rgba(203, 213, 225, 0.7)' }}>
             Quản lý đơn hàng và menu
           </p>
+        </motion.div>
+
+        {/* Ordering Status Toggle */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          style={{ 
+            maxWidth: '600px', 
+            margin: '0 auto 2rem',
+            textAlign: 'center'
+          }}
+        >
+          <div style={{
+            padding: '1.25rem',
+            borderRadius: '16px',
+            background: orderingEnabled 
+              ? 'rgba(34, 197, 94, 0.1)' 
+              : 'rgba(239, 68, 68, 0.1)',
+            border: `2px solid ${orderingEnabled ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+            backdropFilter: 'blur(10px)'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '1rem',
+              flexWrap: 'wrap'
+            }}>
+              <div style={{ textAlign: 'left', flex: 1 }}>
+                <div style={{
+                  fontSize: '1.1rem',
+                  fontWeight: '700',
+                  color: '#e0e7ff',
+                  marginBottom: '0.25rem'
+                }}>
+                  {orderingEnabled ? '✅ Đặt cơm đang mở' : '🔒 Đặt cơm đã đóng'}
+                </div>
+                <div style={{
+                  fontSize: '0.9rem',
+                  color: 'rgba(203, 213, 225, 0.7)'
+                }}>
+                  {orderingEnabled 
+                    ? 'Người dùng có thể đặt cơm' 
+                    : 'Người dùng không thể đặt cơm'}
+                </div>
+              </div>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={toggleOrderingStatus}
+                disabled={togglingStatus}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: orderingEnabled
+                    ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+                    : 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                  color: '#fff',
+                  fontSize: '1rem',
+                  fontWeight: '700',
+                  cursor: togglingStatus ? 'not-allowed' : 'pointer',
+                  opacity: togglingStatus ? 0.6 : 1,
+                  boxShadow: orderingEnabled
+                    ? '0 4px 16px rgba(239, 68, 68, 0.4)'
+                    : '0 4px 16px rgba(34, 197, 94, 0.4)',
+                  minWidth: '140px'
+                }}
+              >
+                {togglingStatus ? '⏳' : orderingEnabled ? '🔒 Đóng' : '✅ Mở'}
+              </motion.button>
+            </div>
+          </div>
         </motion.div>
 
         {/* Tabs */}
