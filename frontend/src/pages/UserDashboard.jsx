@@ -515,6 +515,61 @@ const UserDashboard = () => {
           </motion.p>
         </motion.div>
         
+        {/* Ordering Time Warning */}
+        {!checkingStatus && orderingEnabled && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            style={{
+              maxWidth: '700px',
+              margin: '0 auto 2rem',
+              padding: '1.25rem 1.75rem',
+              borderRadius: '20px',
+              background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.15) 0%, rgba(245, 158, 11, 0.1) 100%)',
+              border: '2px solid rgba(251, 191, 36, 0.4)',
+              backdropFilter: 'blur(10px)',
+              boxShadow: '0 8px 32px rgba(251, 191, 36, 0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '1rem'
+            }}
+          >
+            <motion.div
+              animate={{ 
+                scale: [1, 1.2, 1],
+                rotate: [0, 10, -10, 0]
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: 'easeInOut'
+              }}
+              style={{ fontSize: '2rem', flexShrink: 0 }}
+            >
+              ⏰
+            </motion.div>
+            <div style={{ flex: 1 }}>
+              <div style={{
+                fontSize: '1.05rem',
+                fontWeight: '700',
+                color: '#fbbf24',
+                marginBottom: '0.25rem',
+                textShadow: '0 2px 8px rgba(251, 191, 36, 0.3)'
+              }}>
+                Thời gian đặt cơm giới hạn
+              </div>
+              <div style={{
+                fontSize: '0.95rem',
+                color: 'rgba(253, 230, 138, 0.9)',
+                lineHeight: '1.5'
+              }}>
+                Vui lòng đặt cơm trước <strong style={{ color: '#fbbf24' }}>11:15 sáng</strong> để kịp chuẩn bị
+              </div>
+            </div>
+          </motion.div>
+        )}
+        
         {/* Check if ordering is closed */}
         {checkingStatus ? (
           <motion.div
