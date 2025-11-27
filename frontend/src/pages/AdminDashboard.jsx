@@ -83,9 +83,23 @@ const AdminDashboard = () => {
     try {
       // Get both confirmed and debt orders
       const allData = await orderService.getAllOrders();
-      const confirmed = allData.filter(order => 
-        order.status === 'confirmed' || order.status === 'debt'
-      );
+      
+      // Get today's date at midnight for comparison
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      // Filter orders that are confirmed/debt AND created today
+      const confirmed = allData.filter(order => {
+        if (order.status !== 'confirmed' && order.status !== 'debt') {
+          return false;
+        }
+        
+        const orderDate = new Date(order.createdAt);
+        return orderDate >= today && orderDate < tomorrow;
+      });
+      
       setConfirmedOrders(confirmed);
     } catch (error) {
       console.error('Failed to fetch confirmed orders:', error);
@@ -1195,9 +1209,20 @@ const AdminDashboard = () => {
 
                 {/* Order List - Grouped by Menu Item */}
                 {(() => {
+                  // Filter orders for today only (same logic as fetchConfirmedOrders)
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  const tomorrow = new Date(today);
+                  tomorrow.setDate(tomorrow.getDate() + 1);
+                  
+                  const todayOrders = confirmedOrders.filter(order => {
+                    const orderDate = new Date(order.createdAt);
+                    return orderDate >= today && orderDate < tomorrow;
+                  });
+                  
                   // Group orders by menu item
                   const groupedOrders = {};
-                  confirmedOrders.forEach(order => {
+                  todayOrders.forEach(order => {
                     const itemName = order.menuItem?.name || 'N/A';
                     if (!groupedOrders[itemName]) {
                       groupedOrders[itemName] = {
@@ -1297,7 +1322,7 @@ const AdminDashboard = () => {
                           TỔNG CỘNG
                         </h2>
                         <p style={{ margin: 0, fontSize: '2.5rem', fontWeight: '900' }}>
-                          {confirmedOrders.length} SUẤT
+                          {todayOrders.length} SUẤT
                         </p>
                       </div>
                     </div>
