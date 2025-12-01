@@ -39,7 +39,7 @@ const Login = () => {
           <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🍱</h1>
           <h2 style={{ marginBottom: '0.5rem' }}>Đăng Nhập</h2>
           <p style={{ color: 'var(--text-secondary)', margin: 0 }}>
-            Hệ thống đặt cơm công ty
+            Lưu ý: do sử dụng server miễn phí, nên sẽ có thời gian downtime (15p) nếu không sử dụng, nếu đăng nhập lâu hãy kiên nhẫn chờ đợi!
           </p>
         </div>
 
